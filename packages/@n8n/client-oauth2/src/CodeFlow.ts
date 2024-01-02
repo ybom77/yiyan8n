@@ -106,10 +106,17 @@ export class CodeFlow {
 			body.client_id = options.clientId;
 		}
 
+		//@ts-ignore
+		if (options.httpMethod === "GET") {
+			//@ts-ignore
+			options.query = body
+		}
+
 		const requestOptions = getRequestOptions(
 			{
 				url: options.accessTokenUri,
-				method: 'POST',
+				//@ts-ignore
+				method: options.httpMethod || "POST",
 				headers,
 				body,
 			},
