@@ -152,7 +152,10 @@ export class OAuth2CredentialController extends AbstractOAuthController {
 
 			let options: Partial<ClientOAuth2Options> = {};
 
-			const oAuthOptions = this.convertCredentialToOptions(oauthCredentials);
+			const oAuthOptions = {
+				...oauthCredentials,
+				...this.convertCredentialToOptions(oauthCredentials),
+			};
 
 			if (oauthCredentials.grantType === 'pkce') {
 				options = {
@@ -182,7 +185,7 @@ export class OAuth2CredentialController extends AbstractOAuthController {
 			if (Object.keys(req.query).length > 2) {
 				set(oauthToken.data, 'callbackQueryString', omit(req.query, 'state', 'code'));
 			}
-
+   
 			if (oauthToken === undefined) {
 				const errorMessage = 'Unable to get OAuth2 access tokens!';
 				this.logger.error(errorMessage, {
