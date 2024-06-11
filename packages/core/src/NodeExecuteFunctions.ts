@@ -259,21 +259,21 @@ const getHostFromRequestObject = (
 
 const getBeforeRedirectFn =
 	(agentOptions: AgentOptions, axiosConfig: AxiosRequestConfig) =>
-	(redirectedRequest: Record<string, any>) => {
-		const redirectAgent = new Agent({
-			...agentOptions,
-			servername: redirectedRequest.hostname,
-		});
-		redirectedRequest.agent = redirectAgent;
-		redirectedRequest.agents.https = redirectAgent;
+		(redirectedRequest: Record<string, any>) => {
+			const redirectAgent = new Agent({
+				...agentOptions,
+				servername: redirectedRequest.hostname,
+			});
+			redirectedRequest.agent = redirectAgent;
+			redirectedRequest.agents.https = redirectAgent;
 
-		if (axiosConfig.headers?.Authorization) {
-			redirectedRequest.headers.Authorization = axiosConfig.headers.Authorization;
-		}
-		if (axiosConfig.auth) {
-			redirectedRequest.auth = `${axiosConfig.auth.username}:${axiosConfig.auth.password}`;
-		}
-	};
+			if (axiosConfig.headers?.Authorization) {
+				redirectedRequest.headers.Authorization = axiosConfig.headers.Authorization;
+			}
+			if (axiosConfig.auth) {
+				redirectedRequest.auth = `${axiosConfig.auth.username}:${axiosConfig.auth.password}`;
+			}
+		};
 
 // eslint-disable-next-line complexity
 export async function parseRequestObject(requestObject: IRequestOptions) {
@@ -472,8 +472,8 @@ export async function parseRequestObject(requestObject: IRequestOptions) {
 			axiosConfig.headers === undefined
 				? false
 				: Object.keys(axiosConfig.headers)
-						.map((headerKey) => headerKey.toLowerCase())
-						.includes('accept');
+					.map((headerKey) => headerKey.toLowerCase())
+					.includes('accept');
 		if (!acceptHeaderExists) {
 			axiosConfig.headers = Object.assign(axiosConfig.headers || {}, {
 				Accept: 'application/json',
@@ -812,12 +812,12 @@ export async function proxyRequestToAxios(
 		await additionalData?.hooks?.executeHookFunctions('nodeFetchedData', [workflow?.id, node]);
 		return configObject.resolveWithFullResponse
 			? {
-					body,
-					headers: { ...response.headers },
-					statusCode: response.status,
-					statusMessage: response.statusText,
-					request: response.request,
-				}
+				body,
+				headers: { ...response.headers },
+				statusCode: response.status,
+				statusMessage: response.statusText,
+				request: response.request,
+			}
 			: body;
 	} catch (error) {
 		const { config, response } = error;
@@ -966,7 +966,7 @@ function convertN8nRequestToAxios(n8nRequest: IHttpRequestOptions): AxiosRequest
 	if (!userAgentHeader) {
 		axiosRequest.headers = {
 			...axiosRequest.headers,
-			'User-Agent': 'n8n',
+			'User-Agent': 'solinker',
 		};
 	}
 
@@ -1197,7 +1197,7 @@ async function prepareBinaryData(
 				filePath =
 					binaryData.contentDisposition?.filename ??
 					((responseUrl && new URL(responseUrl).pathname) ?? binaryData.req?.path)?.slice(1);
-			} catch {}
+			} catch { }
 		}
 		if (!mimeType) {
 			mimeType = binaryData.contentType;
@@ -1928,33 +1928,33 @@ export function getAdditionalKeys(
 			resumeFormUrl,
 			customData: runExecutionData
 				? {
-						set(key: string, value: string): void {
-							try {
-								setWorkflowExecutionMetadata(runExecutionData, key, value);
-							} catch (e) {
-								if (mode === 'manual') {
-									throw e;
-								}
-								Logger.verbose(e.message);
+					set(key: string, value: string): void {
+						try {
+							setWorkflowExecutionMetadata(runExecutionData, key, value);
+						} catch (e) {
+							if (mode === 'manual') {
+								throw e;
 							}
-						},
-						setAll(obj: Record<string, string>): void {
-							try {
-								setAllWorkflowExecutionMetadata(runExecutionData, obj);
-							} catch (e) {
-								if (mode === 'manual') {
-									throw e;
-								}
-								Logger.verbose(e.message);
+							Logger.verbose(e.message);
+						}
+					},
+					setAll(obj: Record<string, string>): void {
+						try {
+							setAllWorkflowExecutionMetadata(runExecutionData, obj);
+						} catch (e) {
+							if (mode === 'manual') {
+								throw e;
 							}
-						},
-						get(key: string): string {
-							return getWorkflowExecutionMetadata(runExecutionData, key);
-						},
-						getAll(): Record<string, string> {
-							return getAllWorkflowExecutionMetadata(runExecutionData);
-						},
-					}
+							Logger.verbose(e.message);
+						}
+					},
+					get(key: string): string {
+						return getWorkflowExecutionMetadata(runExecutionData, key);
+					},
+					getAll(): Record<string, string> {
+						return getAllWorkflowExecutionMetadata(runExecutionData);
+					},
+				}
 				: undefined,
 		},
 		$vars: additionalData.variables,
@@ -2313,10 +2313,9 @@ export const validateValueAgainstSchema = (
 
 	if (!validationResult.valid) {
 		throw new ExpressionError(
-			`Invalid input for '${
-				validationResult.fieldName
-					? String(validationResult.fieldName)
-					: propertyDescription.displayName
+			`Invalid input for '${validationResult.fieldName
+				? String(validationResult.fieldName)
+				: propertyDescription.displayName
 			}' [item ${itemIndex}]`,
 			{
 				description: validationResult.errorMessage,
@@ -3245,9 +3244,9 @@ const getFileSystemHelperFunctions = (node: INode): FileSystemHelperFunctions =>
 		} catch (error) {
 			throw error.code === 'ENOENT'
 				? new NodeOperationError(node, error, {
-						message: `The file "${String(filePath)}" could not be accessed.`,
-						level: 'warning',
-					})
+					message: `The file "${String(filePath)}" could not be accessed.`,
+					level: 'warning',
+				})
 				: error;
 		}
 		if (isFilePathBlocked(filePath as string)) {
@@ -3674,8 +3673,7 @@ export function getExecuteFunctions(
 					currentNodeRunIndex,
 				).catch((error) => {
 					Logger.warn(
-						`There was a problem logging input data of node "${this.getNode().name}": ${
-							error.message
+						`There was a problem logging input data of node "${this.getNode().name}": ${error.message
 						}`,
 					);
 				});
@@ -3699,8 +3697,7 @@ export function getExecuteFunctions(
 					currentNodeRunIndex,
 				).catch((error) => {
 					Logger.warn(
-						`There was a problem logging output data of node "${this.getNode().name}": ${
-							error.message
+						`There was a problem logging output data of node "${this.getNode().name}": ${error.message
 						}`,
 					);
 				});
