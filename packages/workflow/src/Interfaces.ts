@@ -310,7 +310,7 @@ type ICredentialHttpRequestNode = {
 export interface ICredentialType {
 	name: string;
 	displayName: string;
-	icon?: Themed<Icon>;
+	icon?: Icon;
 	iconUrl?: Themed<string>;
 	extends?: string[];
 	properties: INodeProperties[];
@@ -876,6 +876,7 @@ export type IExecuteFunctions = ExecuteFunctions.GetNodeParameterFn &
 			inputIndex?: number,
 		): Promise<unknown>;
 		getInputData(inputIndex?: number, inputName?: string): INodeExecutionData[];
+		getNodeInputs(): INodeInputConfiguration[];
 		getNodeOutputs(): INodeOutputConfiguration[];
 		putExecutionToWait(waitTill: Date): Promise<void>;
 		sendMessageToUI(message: any): void;
@@ -1571,13 +1572,15 @@ export type NodeIconColor =
 	| 'azure'
 	| 'purple'
 	| 'crimson';
-export type Icon = `fa:${string}` | `file:${string}` | `node:${string}`;
 export type Themed<T> = T | { light: T; dark: T };
+export type IconRef = `fa:${string}` | `node:${string}.${string}`;
+export type IconFile = `file:${string}.png` | `file:${string}.svg`;
+export type Icon = IconRef | Themed<IconFile>;
 
 export interface INodeTypeBaseDescription {
 	displayName: string;
 	name: string;
-	icon?: Themed<Icon>;
+	icon?: Icon;
 	iconColor?: NodeIconColor;
 	iconUrl?: Themed<string>;
 	badgeIconUrl?: Themed<string>;
@@ -1758,11 +1761,12 @@ export interface INodeInputFilter {
 }
 
 export interface INodeInputConfiguration {
+	category?: string;
 	displayName?: string;
-	maxConnections?: number;
 	required?: boolean;
-	filter?: INodeInputFilter;
 	type: ConnectionTypes;
+	filter?: INodeInputFilter;
+	maxConnections?: number;
 }
 
 export interface INodeOutputConfiguration {
@@ -2318,6 +2322,7 @@ export interface INodeGraphItem {
 	agent?: string; //@n8n/n8n-nodes-langchain.agent
 	prompts?: IDataObject[] | IDataObject; //ai node's prompts, cloud only
 	toolSettings?: IDataObject; //various langchain tool's settings
+	sql?: string; //merge node combineBySql, cloud only
 }
 
 export interface INodeNameIndex {
