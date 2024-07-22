@@ -102,6 +102,7 @@ import type {
 	INodeParameters,
 	EnsureTypeOptions,
 	SSHTunnelFunctions,
+	SchedulingFunctions,
 } from 'n8n-workflow';
 import {
 	ExpressionError,
@@ -114,7 +115,6 @@ import {
 	createDeferredPromise,
 	deepCopy,
 	fileTypeFromMimeType,
-	getGlobalState,
 	isObjectEmpty,
 	isResourceMapperValue,
 	validateFieldType,
@@ -157,6 +157,7 @@ import Container from 'typedi';
 import type { BinaryData } from './BinaryData/types';
 import merge from 'lodash/merge';
 import { InstanceSettings } from './InstanceSettings';
+import { ScheduledTaskManager } from './ScheduledTaskManager';
 import { SSHClientsManager } from './SSHClientsManager';
 import { binaryToBuffer } from './BinaryData/utils';
 
@@ -2585,13 +2586,6 @@ export function getNodeWebhookUrl(
 }
 
 /**
- * Returns the timezone for the workflow
- */
-export function getTimezone(workflow: Workflow): string {
-	return workflow.settings.timezone ?? getGlobalState().defaultTimezone;
-}
-
-/**
  * Returns the full webhook description of the webhook with the given name
  *
  */
@@ -2760,6 +2754,12 @@ async function getInputConnectionData(
 
 	const parentNodes = workflow.getParentNodes(node.name, inputName, 1);
 	if (parentNodes.length === 0) {
+		if (inputConfiguration.required) {
+			throw new NodeOperationError(
+				node,
+				`A ${inputConfiguration?.displayName ?? inputName} sub-node must be connected`,
+			);
+		}
 		return inputConfiguration.maxConnections === 1 ? undefined : [];
 	}
 
@@ -2893,7 +2893,10 @@ async function getInputConnectionData(
 	const nodes = await Promise.all(constParentNodes);
 
 	if (inputConfiguration.required && nodes.length === 0) {
-		throw new NodeOperationError(node, `A ${inputName} processor node must be connected`);
+		throw new NodeOperationError(
+			node,
+			`A ${inputConfiguration?.displayName ?? inputName} sub-node must be connected`,
+		);
 	}
 	if (
 		inputConfiguration.maxConnections !== undefined &&
@@ -2901,7 +2904,7 @@ async function getInputConnectionData(
 	) {
 		throw new NodeOperationError(
 			node,
-			`Only ${inputConfiguration.maxConnections} ${inputName} processor nodes are/is allowed to be connected`,
+			`Only ${inputConfiguration.maxConnections} ${inputName} sub-nodes are/is allowed to be connected`,
 		);
 	}
 
@@ -2956,7 +2959,7 @@ const getCommonWorkflowFunctions = (
 	getRestApiUrl: () => additionalData.restApiUrl,
 	getInstanceBaseUrl: () => additionalData.instanceBaseUrl,
 	getInstanceId: () => Container.get(InstanceSettings).instanceId,
-	getTimezone: () => getTimezone(workflow),
+	getTimezone: () => workflow.timezone,
 	getCredentialsProperties: (type: string) =>
 		additionalData.credentialsHelper.getCredentialsProperties(type),
 	prepareOutputData: async (outputData) => [outputData],
@@ -3285,6 +3288,14 @@ const getSSHTunnelFunctions = (): SSHTunnelFunctions => ({
 		await Container.get(SSHClientsManager).getClient(credentials),
 });
 
+const getSchedulingFunctions = (workflow: Workflow): SchedulingFunctions => {
+	const scheduledTaskManager = Container.get(ScheduledTaskManager);
+	return {
+		registerCron: (cronExpression, onTick) =>
+			scheduledTaskManager.registerCron(workflow, cronExpression, onTick),
+	};
+};
+
 const getAllowedPaths = () => {
 	const restrictFileAccessTo = process.env[RESTRICT_FILE_ACCESS_TO];
 	if (!restrictFileAccessTo) {
@@ -3488,6 +3499,7 @@ export function getExecutePollFunctions(
 				createDeferredPromise,
 				...getRequestHelperFunctions(workflow, node, additionalData),
 				...getBinaryHelperFunctions(additionalData, workflow.id),
+				...getSchedulingFunctions(workflow),
 				returnJsonArray,
 			},
 		};
@@ -3552,6 +3564,7 @@ export function getExecuteTriggerFunctions(
 				...getSSHTunnelFunctions(),
 				...getRequestHelperFunctions(workflow, node, additionalData),
 				...getBinaryHelperFunctions(additionalData, workflow.id),
+				...getSchedulingFunctions(workflow),
 				returnJsonArray,
 			},
 		};
