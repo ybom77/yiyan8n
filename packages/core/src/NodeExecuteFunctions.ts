@@ -3167,10 +3167,16 @@ const getRequestHelperFunctions = (
 				additionalKeys.$response = newResponse;
 				additionalKeys.$pageCount = additionalKeys.$pageCount + 1;
 
-				if (
-					paginationOptions.maxRequests &&
-					additionalKeys.$pageCount >= paginationOptions.maxRequests
-				) {
+				const maxRequests = getResolvedValue(
+					paginationOptions.maxRequests,
+					itemIndex,
+					runIndex,
+					executeData,
+					additionalKeys,
+					false,
+				) as number;
+
+				if (maxRequests && additionalKeys.$pageCount >= maxRequests) {
 					break;
 				}
 
@@ -3185,7 +3191,16 @@ const getRequestHelperFunctions = (
 
 				if (makeAdditionalRequest) {
 					if (paginationOptions.requestInterval) {
-						await sleep(paginationOptions.requestInterval);
+						const requestInterval = getResolvedValue(
+							paginationOptions.requestInterval,
+							itemIndex,
+							runIndex,
+							executeData,
+							additionalKeys,
+							false,
+						) as number;
+
+						await sleep(requestInterval);
 					}
 					if (tempResponseData.statusCode < 200 || tempResponseData.statusCode >= 300) {
 						// We have it configured to let all requests pass no matter the response code
