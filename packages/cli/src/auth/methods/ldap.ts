@@ -12,7 +12,7 @@ import {
 	updateLdapUserOnLocalDb,
 } from '@/Ldap/helpers.ee';
 import type { User } from '@db/entities/User';
-import { EventService } from '@/eventbus/event.service';
+import { EventService } from '@/events/event.service';
 
 export const handleLdapLogin = async (
 	loginId: string,
@@ -51,7 +51,7 @@ export const handleLdapLogin = async (
 			await updateLdapUserOnLocalDb(identity, ldapAttributesValues);
 		} else {
 			const user = await createLdapUserOnLocalDb(ldapAttributesValues, ldapId);
-			void Container.get(InternalHooks).onUserSignup(user, {
+			Container.get(InternalHooks).onUserSignup(user, {
 				user_type: 'ldap',
 				was_disabled_ldap_user: false,
 			});

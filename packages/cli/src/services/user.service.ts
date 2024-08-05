@@ -12,7 +12,7 @@ import { InternalHooks } from '@/InternalHooks';
 import { UrlService } from '@/services/url.service';
 import type { UserRequest } from '@/requests';
 import { InternalServerError } from '@/errors/response-errors/internal-server.error';
-import { EventService } from '@/eventbus/event.service';
+import { EventService } from '@/events/event.service';
 
 @Service()
 export class UserService {
@@ -144,14 +144,14 @@ export class UserService {
 					if (result.emailSent) {
 						invitedUser.user.emailSent = true;
 						delete invitedUser.user?.inviteAcceptUrl;
-						void Container.get(InternalHooks).onUserTransactionalEmail({
+						Container.get(InternalHooks).onUserTransactionalEmail({
 							user_id: id,
 							message_type: 'New user invite',
 							public_api: false,
 						});
 					}
 
-					void Container.get(InternalHooks).onUserInvite({
+					Container.get(InternalHooks).onUserInvite({
 						user: owner,
 						target_user_id: Object.values(toInviteUsers),
 						public_api: false,
@@ -164,7 +164,7 @@ export class UserService {
 					});
 				} catch (e) {
 					if (e instanceof Error) {
-						void Container.get(InternalHooks).onEmailFailed({
+						Container.get(InternalHooks).onEmailFailed({
 							user: owner,
 							message_type: 'New user invite',
 							public_api: false,

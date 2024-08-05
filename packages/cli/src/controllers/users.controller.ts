@@ -28,7 +28,7 @@ import { Project } from '@/databases/entities/Project';
 import { WorkflowService } from '@/workflows/workflow.service';
 import { CredentialsService } from '@/credentials/credentials.service';
 import { ProjectService } from '@/services/project.service';
-import { EventService } from '@/eventbus/event.service';
+import { EventService } from '@/events/event.service';
 
 @RestController('/users')
 export class UsersController {
@@ -253,7 +253,7 @@ export class UsersController {
 			await trx.delete(User, { id: userToDelete.id });
 		});
 
-		void this.internalHooks.onUserDeletion({
+		this.internalHooks.onUserDeletion({
 			user: req.user,
 			telemetryData,
 			publicApi: false,
@@ -294,7 +294,7 @@ export class UsersController {
 
 		await this.userService.update(targetUser.id, { role: payload.newRoleName });
 
-		void this.internalHooks.onUserRoleChange({
+		this.internalHooks.onUserRoleChange({
 			user: req.user,
 			target_user_id: targetUser.id,
 			target_user_new_role: ['global', payload.newRoleName].join(' '),

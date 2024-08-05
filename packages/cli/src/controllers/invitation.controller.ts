@@ -18,7 +18,7 @@ import { BadRequestError } from '@/errors/response-errors/bad-request.error';
 import { ForbiddenError } from '@/errors/response-errors/forbidden.error';
 import { InternalHooks } from '@/InternalHooks';
 import { ExternalHooks } from '@/ExternalHooks';
-import { EventService } from '@/eventbus/event.service';
+import { EventService } from '@/events/event.service';
 
 @RestController('/invitations')
 export class InvitationController {
@@ -168,7 +168,7 @@ export class InvitationController {
 
 		this.authService.issueCookie(res, updatedUser, req.browserId);
 
-		void this.internalHooks.onUserSignup(updatedUser, {
+		this.internalHooks.onUserSignup(updatedUser, {
 			user_type: 'email',
 			was_disabled_ldap_user: false,
 		});
